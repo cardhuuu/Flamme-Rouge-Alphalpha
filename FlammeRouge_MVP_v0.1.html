@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ca" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <title>Flamme Rouge Tracker v1.0.2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <style>
+    :root{ --bg:#0e1323; --panel:#121826; --ink:#e6e9ef; --muted:#9aa3b2; --line:#263040; --accent:#22c55e; --warn:#ef4444; --btn:#141b2a; --btn-b:#2a3a56; --focus:#3b82f6; --radius:14px; --pad:12px; --gap:10px; --tap:48px; --fs:15px; --table-pad:10px; --row-gap:10px; --sticky-h:56px }
+    [data-theme="light"]{ --bg:#f5f7fb; --panel:#ffffff; --ink:#0f172a; --muted:#6b7280; --line:#e5e7eb; --btn:#f3f4f6; --btn-b:#e5e7eb }
+    :root.compact{ --tap:42px; --table-pad:8px; --row-gap:8px; --pad:10px; --radius:12px; --fs:14px }
+    @media (max-width:800px){ :root{ --fs:16px; --tap:52px; --row-gap:12px; --table-pad:12px } :root.compact{ --fs:15px; --tap:48px } }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;-webkit-text-size-adjust:100%}
+    .wrap{max-width:1200px;margin:0 auto;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+    header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:10px 0;background:linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, transparent), color-mix(in srgb, var(--bg) 70%, transparent));backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+    .title-area{display:flex;align-items:center;gap:12px;min-height:var(--sticky-h)} h1{font-size:18px;margin:0}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:color-mix(in srgb, var(--panel) 80%, #0b1220);border:1px solid var(--line);font-size:12px}
+    .header-tools{display:flex;gap:8px;align-items:center}
+    #langSelect,.icon-btn{border:1px solid var(--line);border-radius:10px;min-height:var(--tap);padding:0 12px;background:var(--panel);color:var(--ink)}
+    .icon-btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);margin:16px 0;box-shadow:0 10px 24px rgba(0,0,0,.12)}
+    .card .card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .card.collapsed .card-body{display:none}
+    .muted{color:var(--muted)}
+    label{display:block;color:var(--muted);font-size:12px;margin-top:8px;text-transform:uppercase;letter-spacing:.05em}
+    input,select,button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
+    input:focus,select:focus,button:focus{box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);border-color:var(--focus)}
+    .btn{background:var(--btn);border:1px solid var(--btn-b);cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px;min-height:var(--tap);padding:0 14px;user-select:none;-webkit-tap-highlight-color:transparent}
+    .btn:hover{background:var(--btn-b)} .btn.primary{background:#16a34a;border-color:#16a34a;color:#fff} .btn.warn{background:#7f1d1d;border-color:#b91c1c;color:#fff}
+    .row{display:flex;gap:var(--row-gap);align-items:end;flex-wrap:wrap} .col{display:flex;flex-direction:column;gap:6px}
+    .table-wrap{overflow:auto;border-radius:12px;border:1px solid var(--line)}
+    table{width:100%;border-collapse:collapse;background:color-mix(in srgb, var(--panel) 92%, #0d1424)} th,td{border-bottom:1px solid var(--line);padding:var(--table-pad) 8px;text-align:left;vertical-align:middle}
+    th{color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0;background:var(--panel)} tr:hover td{background:color-mix(in srgb, var(--panel) 85%, #111a2d)}
+    .color-dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid #0003;margin-right:8px;vertical-align:middle}
+    .collapser{display:none} @media (max-width:800px){.collapser{display:flex;gap:8px;margin:10px 0}.collapser .btn{flex:1;justify-content:center}}
+    .dock{position:sticky;bottom:0;z-index:40;background:linear-gradient(0deg, color-mix(in srgb, var(--bg) 92%, transparent), color-mix(in srgb, var(--bg) 75%, transparent));padding:10px;border-top:1px solid var(--line);display:none;gap:8px} .dock .btn{flex:1;justify-content:center} @media (max-width:800px){ .dock{display:flex} }
+    .btn.table{padding:6px 10px;min-height:40px}
+    .ellipsis{max-width:380px;display:inline-block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis} @media (max-width:800px){ .ellipsis{max-width:200px} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title-area">
+      <h1 id="txt-title">Tracker Flamme Rouge</h1>
+      <span class="pill">v1.0.2</span>
+    </div>
+    <div class="header-tools">
+      <button class="icon-btn" id="themeBtn" title="Theme">🌙</button>
+      <button class="icon-btn" id="densBtn" title="Density">↕️</button>
+      <select id="langSelect" title="Language">
+        <option value="ca">Català</option>
+        <option value="es">Español</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="collapser">
+    <button class="btn" onclick="jump('#cfg')">⚙️ <span id="txt-cfgShort">Config</span></button>
+    <button class="btn" onclick="jump('#stages')">🗺️ <span id="txt-stagesShort">Etapes</span></button>
+    <button class="btn" onclick="jump('#turns')">⏱️ <span id="txt-turnsShort">Torns</span></button>
+    <button class="btn" onclick="jump('#finish')">🏁 <span id="txt-finShort">Arribada</span></button>
+    <button class="btn" onclick="jump('#mountain')">⛰️ <span id="txt-mtnShort">Muntanya</span></button>
+    <button class="btn" onclick="jump('#stand')">📊 <span id="txt-standShort">Generals</span></button>
+  </div>
+
+  <section class="card" id="cfg">
+    <div class="card-head">
+      <h2 id="txt-cfgTitle">Equips i Corredors</h2>
+      <button class="btn" onclick="toggleCard(this)">▾</button>
+    </div>
+    <div class="card-body">
+      <div id="teamsCfg" class="row"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="lockCfgBtn">✔️ Inicia la competició</button>
+        <button class="btn" id="unlockCfgBtn">🔓 Desbloqueja</button>
+        <button class="btn" id="saveDefaultsBtn" title="Guarda noms i equips com a base">⭐ Desa defectes</button>
+        <button class="btn" id="loadDefaultsBtn">↩️ Carrega defectes</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div>
+      <section class="card" id="stages">
+        <div class="card-head">
+          <h2 id="txt-stagesTitle">Etapes</h2>
+          <button class="btn" onclick="toggleCard(this)">▾</button>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <input id="stageName" placeholder="Nom etapa..." style="flex:1">
+            <button class="btn primary" id="addStageBtn">Afegir etapa</button>
+          </div>
+          <div class="table-wrap">
+            <table id="stagesTbl">
+              <thead><tr><th>#</th><th id="txt-thName">Nom</th><th id="txt-thFin">Arribades</th><th id="txt-thActionsStages">Accions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="sep"></div>
+          <h2 id="txt-rulesTitle">Regles i Bonificacions</h2>
+          <div class="row">
+            <div class="col" style="min-width:180px">
+              <label id="txt-rulesComb">Punts Combativitat/torn</label>
+              <input id="combPerTurn" type="number" value="1" style="width:100%">
+            </div>
+            <div class="col" style="min-width:260px">
+              <label id="txt-rulesPodium">Podium (1r, 2n, 3r) en segons</label>
+              <div class="row" style="gap:8px">
+                <input id="bPod1" type="number" value="20" style="width:100%">
+                <input id="bPod2" type="number" value="10" style="width:100%">
+                <input id="bPod3" type="number" value="6" style="width:100%">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
+<section class="card" id="track">
+  <div class="card-head">
+    <h2>🧩 <span id="txt-trackTitle">Circuit (import Builder)</span> (<span id="currStageNameT" class="muted">—</span>)</h2>
+    <button class="btn" onclick="toggleCard(this)">▾</button>
+  </div>
+  <div class="card-body">
+    <p class="muted" id="txt-trackHelp">Carrega un JSON exportat de flammerougebuilder.com (Save stage). El convertirem a una llista de losetes i una estimació de caselles (v0.1).</p>
+    <div class="row">
+      <input type="file" id="trackFile" accept="application/json,.json" style="flex:1" />
+      <button class="btn primary" id="importTrackBtn">Importa JSON</button>
+      <button class="btn" id="applyAsNewStageBtn" title="Crea una etapa nova amb aquest circuit">➕ Etapa amb circuit</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="col" style="min-width:220px; flex:1">
+        <label id="txt-trackName">Nom del circuit</label>
+        <input id="trackName" placeholder="—" />
+      </div>
+      <div class="col" style="min-width:160px">
+        <label id="txt-trackTiles">Losetes</label>
+        <input id="trackTilesCount" disabled />
+      </div>
+      <div class="col" style="min-width:160px">
+        <label id="txt-trackSquares">Caselles (estimació)</label>
+        <input id="trackSquaresCount" disabled />
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table id="trackTilesTbl">
+        <thead><tr><th>#</th><th>Tile</th><th>Orientació</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:10px" id="txt-trackNote">Nota v0.1: sense art oficial i amb conversió simple. La definició exacta de caselles per loseta i terrenys s'afegirà a v0.2.</p>
+  </div>
+</section>
+
+<section class="card" id="turns">
+        <div class="card-head">
+          <h2><span id="txt-turnsTitle">Torns / Combativitat</span> (<span id="currStageNameA" class="muted">—</span>)</h2>
+          <button class="btn" onclick="toggleCard(this)">▾</button>
+        </div>
+        <div class="card-body">
+          <button class="btn" id="addTurnBtn">➕ Afegir torn</button>
+          <div class="table-wrap">
+            <table id="turnsTbl">
+              <thead><tr><th>Torn</th><th id="txt-thLeader">Líder del torn</th><th id="txt-thActionsTurns">Accions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card" id="finish">
+        <div class="card-head">
+          <h2><span id="txt-finTitle">Arribada d'Etapa</span> (<span id="currStageNameB" class="muted">—</span>)</h2>
+          <button class="btn" onclick="toggleCard(this)">▾</button>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col" style="flex:1; min-width:160px"><label id="txt-finRider">Rider</label><select id="finRider"></select></div>
+            <div class="col" style="width:140px"><label id="txt-finT">Torn Final</label><input id="finTurn" type="number"></div>
+            <div class="col" style="width:130px"><label id="txt-finC">+Caselles</label><input id="finOver" type="number" value="0"></div>
+            <button class="btn primary" id="addFinishBtn">OK</button>
+          </div>
+          <div class="table-wrap">
+            <table id="resultsTbl">
+              <thead><tr><th>#</th><th>Rider</th><th id="txt-thTime">Temps</th><th id="txt-thComb">Comb</th><th id="txt-thActionsResults">Accions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="mountain">
+        <div class="card-head">
+          <h2 id="txt-mountainTitle">Muntanya</h2>
+          <button class="btn" onclick="toggleCard(this)">▾</button>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <input id="climbName" placeholder="Nom port..." style="flex:1">
+            <div class="col" style="width:160px"><label id="txt-mtnLen">Caselles</label><input id="climbLen" type="number" value="3"></div>
+            <button class="btn" id="addClimbBtn">Afegir</button>
+          </div>
+          <div class="table-wrap">
+            <table id="climbsTbl">
+              <thead><tr><th>Nom</th><th>Pts</th><th id="txt-thActionsClimbs">Accions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="sep"></div>
+          <div class="row">
+            <select id="mtnClimbSelect" style="flex:1"></select>
+            <select id="mtnRiderSelect" style="flex:1"></select>
+            <button class="btn primary" id="addMtnPassBtn">Pas</button>
+          </div>
+          <div class="table-wrap">
+            <table id="mtnPassesTbl">
+              <thead><tr><th>Port</th><th>Rider</th><th>Pts</th><th id="txt-thActionsPasses">Accions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card" id="sess">
+    <div class="card-head">
+      <h2 id="txt-sessTitle">Sessió de Gran Volta</h2>
+      <button class="btn" onclick="toggleCard(this)">▾</button>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <button class="btn" id="saveBtn">💾 <span id="txt-saveShort">Desa</span></button>
+        <button class="btn" id="loadBtn">📂 <span id="txt-loadShort">Carrega</span></button>
+        <button class="btn warn" id="resetBtn">🗑️ <span id="txt-resetShort">Neteja</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="stand">
+    <div class="card-head">
+      <h2 id="txt-standTitle">Classificacions Generals</h2>
+      <button class="btn" onclick="toggleCard(this)">▾</button>
+    </div>
+    <div class="card-body">
+      <div class="row" style="margin-bottom:10px">
+        <select id="viewSelect" style="min-width:220px">
+          <option value="gc">General (Temps)</option>
+          <option value="comb">Combativitat</option>
+          <option value="mountain">Muntanya</option>
+        </select>
+        <button class="btn" id="recalcBtn">Recalcula</button>
+      </div>
+      <div class="table-wrap">
+        <table id="standingsTbl">
+          <thead><tr><th>#</th><th id="txt-thRiderEquip">Rider / Equip</th><th id="txt-thVal">Valor</th><th id="txt-thDiff">Dif.</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="dock">
+    <button class="btn" id="saveBtnDock">💾 <span id="txt-saveShortDock">Desa</span></button>
+    <button class="btn" id="loadBtnDock">📂 <span id="txt-loadShortDock">Carrega</span></button>
+    <button class="btn warn" id="resetBtnDock">🗑️ <span id="txt-resetShortDock">Neteja</span></button>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const localKey = 'fr_volta_data_v10';
+const defaultsKey = 'fr_defaults_v10';
+const prefsKey = 'fr_prefs_v10';
+
+function jump(sel){ const el = document.querySelector(sel); if(!el) return; const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({top:y, behavior:'smooth'}); }
+function toggleCard(btn){ const card = btn.closest('.card'); card.classList.toggle('collapsed'); }
+
+// Simple preferences (theme/density/lang)
+function loadPrefs(){ try{ return JSON.parse(localStorage.getItem(prefsKey)||'{}'); }catch(e){ return {}; } }
+function savePrefs(p){ const cur = loadPrefs(); const n = {...cur, ...p}; localStorage.setItem(prefsKey, JSON.stringify(n)); }
+
+// I18N (resum necessari)
+const i18n = {
+  ca:{ title:"Tracker Flamme Rouge", cfgTitle:"Equips i Corredors", lock:"✔️ Inicia la competició", unlock:"🔓 Desbloqueja", stages:"Etapes", addStage:"Afegir etapa", thName:"Nom", thFin:"Arribades", rules:"Regles i Bonificacions", rComb:"Punts Combativitat/torn", rPod:"Podium (1r, 2n, 3r) en segons", turns:"Torns / Combativitat", thLeader:"Líder del torn", fin:"Arribada d'Etapa", fRider:"Rider", fT:"Torn Final", fC:"+Caselles", thTime:"Temps", thComb:"Comb", mountain:"Muntanya", stand:"Classificacions Generals", sess:"Sessió de Gran Volta", thRiderEquip:"Rider / Equip", thVal:"Valor", mtnLen:"Caselles", alertDupMtn:"Aquest corredor ja ha passat per aquest port!", alertDupFin:"Aquest corredor ja ha arribat a meta!", saveDef:"⭐ Desa defectes", loadDef:"↩️ Carrega defectes", recalc:"Recalcula", saveGame:"Sessió desada!", loadGame:"Partida carregada!", resetMsg:"Segur? S'esborraran tots els equips, etapes i la partida desada.", cfgShort:"Config", stagesShort:"Etapes", turnsShort:"Torns", finShort:"Arribada", mtnShort:"Muntanya", standShort:"Generals", saveShort:"Desa", loadShort:"Carrega", resetShort:"Neteja", themeLight:"☀️ Clar", themeDark:"🌙 Fosc", densNormal:"↕️ Relaxat", densCompact:"↕️ Compacte" },
+  es:{ title:"Tracker Flamme Rouge", cfgTitle:"Equipos y Corredores", lock:"✔️ Iniciar competición", unlock:"🔓 Desbloquear", stages:"Etapas", addStage:"Añadir etapa", thName:"Nombre", thFin:"Llegadas", rules:"Reglas y Bonificaciones", rComb:"Puntos Combatividad/turno", rPod:"Podio (1º, 2º, 3º) en segundos", turns:"Turnos / Combatividad", thLeader:"Líder del turno", fin:"Llegada de Etapa", fRider:"Corredor", fT:"Turno Final", fC:"+Casillas", thTime:"Tiempo", thComb:"Comb", mountain:"Montaña", stand:"Clasificaciones Generales", sess:"Sesión de Gran Vuelta", thRiderEquip:"Corredor / Equipo", thVal:"Valor", mtnLen:"Casillas", alertDupMtn:"¡Este corredor ya ha pasado por este puerto!", alertDupFin:"¡Este corredor ya ha cruzado la meta!", saveDef:"⭐ Guardar por defecto", loadDef:"↩️ Cargar por defecto", recalc:"Recalcular", saveGame:"¡Sesión guardada!", loadGame:"¡Partida cargada!", resetMsg:"¿Seguro? Se borrarán todos los equipos, etapas y la partida guardada.", cfgShort:"Config", stagesShort:"Etapas", turnsShort:"Turnos", finShort:"Meta", mtnShort:"Montaña", standShort:"Generales", saveShort:"Guardar", loadShort:"Cargar", resetShort:"Borrar", themeLight:"☀️ Claro", themeDark:"🌙 Oscuro", densNormal:"↕️ Relajado", densCompact:"↕️ Compacto" },
+  en:{ title:"Flamme Rouge Tracker", cfgTitle:"Teams & Riders", lock:"✔️ Start competition", unlock:"🔓 Unlock", stages:"Stages", addStage:"Add stage", thName:"Name", thFin:"Finishes", rules:"Rules & Bonuses", rComb:"Comb. points/turn", rPod:"Podium (1st, 2nd, 3rd) in seconds", turns:"Turns / Combativity", thLeader:"Turn leader", fin:"Stage Finish", fRider:"Rider", fT:"Final Turn", fC:"+Squares", thTime:"Time", thComb:"Comb", mountain:"Mountain", stand:"General Classifications", sess:"Grand Tour Session", thRiderEquip:"Rider / Team", thVal:"Value", mtnLen:"Squares", alertDupMtn:"This rider already passed this climb!", alertDupFin:"This rider already finished!", saveDef:"⭐ Save defaults", loadDef:"↩️ Load defaults", recalc:"Recalculate", saveGame:"Session saved!", loadGame:"Game loaded!", resetMsg:"Are you sure? All teams, stages and the saved game will be deleted.", cfgShort:"Config", stagesShort:"Stages", turnsShort:"Turns", finShort:"Finish", mtnShort:"Mountains", standShort:"GC", saveShort:"Save", loadShort:"Load", resetShort:"Reset", themeLight:"☀️ Light", themeDark:"🌙 Dark", densNormal:"↕️ Relaxed", densCompact:"↕️ Compact" },
+  fr:{ title:"Suivi Flamme Rouge", cfgTitle:"Équipes et Coureurs", lock:"✔️ Démarrer la compétition", unlock:"🔓 Déverrouiller", stages:"Étapes", addStage:"Ajouter étape", thName:"Nom", thFin:"Arrivées", rules:"Règles et Bonus", rComb:"Pts combativité/tour", rPod:"Podium (1er, 2e, 3e) en secondes", turns:"Tours / Combativité", thLeader:"Leader du tour", fin:"Arrivée d'étape", fRider:"Coureur", fT:"Tour final", fC:"+Cases", thTime:"Temps", thComb:"Comb", mountain:"Montagne", stand:"Classements Généraux", sess:"Session Grand Tour", thRiderEquip:"Coureur / Équipe", thVal:"Valeur", mtnLen:"Cases", alertDupMtn:"Ce coureur est déjà passé par ce col !", alertDupFin:"Ce coureur a déjà franchi la ligne !", saveDef:"⭐ Enregistrer défauts", loadDef:"↩️ Charger défauts", recalc:"Recalculer", saveGame:"Session enregistrée !", loadGame:"Partie chargée !", resetMsg:"Êtes-vous sûr ? Toutes les équipes, étapes et la partie enregistrée seront supprimées.", cfgShort:"Config", stagesShort:"Étapes", turnsShort:"Tours", finShort:"Arrivée", mtnShort:"Montagne", standShort:"Classements", saveShort:"Enr.", loadShort:"Charger", resetShort:"Effacer", themeLight:"☀️ Clair", themeDark:"🌙 Sombre", densNormal:"↕️ Détendu", densCompact:"↕️ Compact" }
+};
+
+function currentL(){ return i18n[$('#langSelect').value] || i18n.ca; }
+
+// Update all labels (incl. theme/density buttons)
+function updateLanguage(){ const l=currentL();
+  $('#txt-title').textContent=l.title; $('#txt-cfgTitle').textContent=l.cfgTitle; $('#lockCfgBtn').textContent=l.lock; $('#unlockCfgBtn').textContent=l.unlock;
+  $('#txt-stagesTitle').textContent=l.stages; $('#addStageBtn').textContent=l.addStage; $('#txt-thName').textContent=l.thName; $('#txt-thFin').textContent=l.thFin; $('#txt-thActionsStages').textContent=l.actions;
+  $('#txt-rulesTitle').textContent=l.rules; $('#txt-rulesComb').textContent=l.rComb; $('#txt-rulesPodium').textContent=l.rPod;
+  $('#txt-turnsTitle').textContent=l.turns; $('#txt-thLeader').textContent=l.thLeader; $('#txt-thActionsTurns').textContent=l.actions;
+  $('#txt-finTitle').textContent=l.fin; $('#txt-finRider').textContent=l.fRider; $('#txt-finT').textContent=l.fT; $('#txt-finC').textContent=l.fC; $('#txt-thTime').textContent=l.thTime; $('#txt-thComb').textContent=l.thComb; $('#txt-thActionsResults').textContent=l.actions;
+  $('#txt-mountainTitle').textContent=l.mountain; $('#txt-mtnLen').textContent=l.mtnLen; $('#addMtnPassBtn').textContent=l.pass; $('#txt-thActionsClimbs').textContent=l.actions; $('#txt-thActionsPasses').textContent=l.actions;
+  $('#txt-standTitle').textContent=l.stand; $('#txt-thRiderEquip').textContent=l.thRiderEquip; $('#txt-thVal').textContent=l.thVal; $('#txt-thDiff').textContent=l.diff;
+  $('#txt-sessTitle').textContent=l.sess;
+  $('#txt-saveShort').textContent=l.saveShort; $('#txt-loadShort').textContent=l.loadShort; $('#txt-resetShort').textContent=l.resetShort; $('#txt-saveShortDock').textContent=l.saveShort; $('#txt-loadShortDock').textContent=l.loadShort; $('#txt-resetShortDock').textContent=l.resetShort;
+  // placeholders
+  $('#stageName').setAttribute('placeholder', l.phStageName || 'Nom etapa...'); $('#climbName').setAttribute('placeholder', l.phClimbName || 'Nom port...');
+  // mobile toggles
+  $('#txt-cfgShort').textContent=l.cfgShort; $('#txt-stagesShort').textContent=l.stagesShort; $('#txt-turnsShort').textContent=l.turnsShort; $('#txt-finShort').textContent=l.finShort; $('#txt-mtnShort').textContent=l.mtnShort; $('#txt-standShort').textContent=l.standShort;
+  // theme/density labels
+  const isLight = document.documentElement.getAttribute('data-theme')==='light';
+  $('#themeBtn').textContent = isLight ? l.themeDark : l.themeLight;
+  const isCompact = document.documentElement.classList.contains('compact');
+  $('#densBtn').textContent = isCompact ? l.densNormal : l.densCompact;
+}
+
+// Minimal game logic stubs from previous build (unchanged)…
+let state = { locked:false, teams:[], stages:[] }; let currentStageId = null;
+const hhmmss = s => { if (s == null || isNaN(s)) return '--:--:--'; if (s < 0) return '-' + hhmmss(-s); const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), r=s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`; };
+function initTeams(){ const COLORS={VERD:'#22c55e',BLAU:'#3b82f6',VERMELL:'#ef4444',NEGRE:'#1e293b',BLANC:'#f8fafc',ROSA:'#f472b6'}; const names=['Verd','Blau','Vermell','Negre','Blanc','Rosa']; state.teams=Array.from({length:6},(_,i)=>({id:`T${i+1}`,name:names[i],color:Object.values(COLORS)[i],active:i<4,riders:[{id:`T${i+1}R`,name:`R${i+1}`},{id:`T${i+1}S`,name:`S${i+1}`}] })); }
+function renderTeamsCfg(){ const h=$('#teamsCfg'); h.innerHTML=''; state.teams.forEach(t=>{ const d=document.createElement('div'); d.className='col'; d.style.border='1px solid var(--line)'; d.style.padding='12px'; d.style.borderRadius='12px'; d.style.flex='1 1 260px'; d.innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><input type="checkbox" ${t.active?'checked':''} onchange="updateTeamProp('${t.id}','active',this.checked)" ${state.locked?'disabled':''} style="min-width:var(--tap);min-height:var(--tap)"><span class="color-dot" style="background:${t.color}"></span><input value="${t.name}" onchange="updateTeamProp('${t.id}','name',this.value)" style="flex:1;min-width:120px" ${state.locked?'disabled':''}></div><div class="rider-edit-box" style="display:flex;flex-direction:column;gap:8px"><input value="${t.riders[0].name}" onchange="updateRiderName('${t.id}',0,this.value)" ${state.locked?'disabled':''}><input value="${t.riders[1].name}" onchange="updateRiderName('${t.id}',1,this.value)" ${state.locked?'disabled':''}></div>`; h.appendChild(d); }); }
+function updateTeamProp(id,prop,val){ const t=state.teams.find(x=>x.id===id); if(t) t[prop]=val; } function updateRiderName(tid,idx,val){ const t=state.teams.find(x=>x.id===tid); if(t) t.riders[idx].name=val; }
+function fullRender(){ renderTeamsCfg(); renderStages(); renderTurns(); renderResults(); renderClimbs(); updateSelectors(); renderMtnPasses(); renderStandings(); updateLanguage(); const s=state.stages.find(x=>x.id===currentStageId); $('#currStageNameA').textContent=$('#currStageNameB').textContent=$('#currStageNameT').textContent=s?s.name:'—'; }
+function addStage(name){ if(!name) return; const id=Date.now(); state.stages.push({id,name,turns:[],finishes:[],climbs:[],mtnPasses:[]}); currentStageId=id; fullRender(); }
+function renderStages(){ const b=$('#stagesTbl tbody'); b.innerHTML=''; state.stages.forEach((s,i)=>{ const tr=document.createElement('tr'); if(s.id===currentStageId) tr.style.background='color-mix(in srgb, var(--panel) 80%, #1a2439)'; tr.innerHTML=`<td>${i+1}</td><td>${s.name}</td><td>${s.finishes.length}</td><td><button class="btn table" onclick="setStage(${s.id})">👁️</button></td>`; b.appendChild(tr); }); }
+function setStage(id){ currentStageId=id; fullRender(); }
+function addTurn(){ const s=state.stages.find(x=>x.id===currentStageId); if(!s) return; s.turns.push({id:s.turns.length+1,leaderRiderId:null}); $('#finTurn').value=s.turns.length; renderTurns(); }
+function renderTurns(){ const b=$('#turnsTbl tbody'); b.innerHTML=''; const s=state.stages.find(x=>x.id===currentStageId); if(!s) return; s.turns.forEach(t=>{ b.innerHTML+=`<tr><td>${t.id}</td><td><select onchange="setTurnLeader(${t.id}, this.value)"><option value="">-</option>${getActiveRiders().map(r=>`<option value="${r.id}" ${t.leaderRiderId==r.id?'selected':''}>${r.name}</option>`).join('')}</select></td><td><button class="btn warn table" onclick="delTurn(${t.id})">X</button></td></tr>`; }); }
+function setTurnLeader(tid,rid){ const s=state.stages.find(x=>x.id===currentStageId); s.turns.find(x=>x.id===tid).leaderRiderId=rid; renderStandings(); }
+function delTurn(id){ const s=state.stages.find(x=>x.id===currentStageId); s.turns=s.turns.filter(t=>t.id!==id); renderTurns(); }
+function addFinish(){ const s=state.stages.find(x=>x.id===currentStageId); const rid=$('#finRider').value, t=parseInt($('#finTurn').value||0), o=parseInt($('#finOver').value||0); if(!s||!rid||!t) return; const l=currentL(); if(s.finishes.some(f=>f.riderId===rid)){ alert(l.alertDupFin); return; } s.finishes.push({riderId:rid,turn:t,over:o}); renderResults(); renderStandings(); }
+function renderResults(){ const b=$('#resultsTbl tbody'); b.innerHTML=''; const s=state.stages.find(x=>x.id===currentStageId); if(!s) return; const sorted=[...s.finishes].sort((a,b)=>a.turn===b.turn?b.over-a.over:a.turn-b.turn); sorted.forEach((f,i)=>{ const r=getRider(f.riderId); const color=getTeamColorByRider(f.riderId); const timeSec=(f.turn*600)-(f.over*10); const comb=s.turns.filter(t=>t.leaderRiderId===f.riderId).length*parseInt($('#combPerTurn').value||0); b.innerHTML+=`<tr><td>${i+1}</td><td title="${r.name}"><span class="color-dot" style="background:${color}"></span><span class="ellipsis">${r.name}</span></td><td>${hhmmss(timeSec)}</td><td>${comb}</td><td><button class="btn warn table" onclick="delFinish('${f.riderId}')">X</button></td></tr>`; }); }
+function delFinish(rid){ const s=state.stages.find(x=>x.id===currentStageId); s.finishes=s.finishes.filter(f=>f.riderId!==rid); renderResults(); renderStandings(); }
+function addClimb(){ const s=state.stages.find(x=>x.id===currentStageId); if(!s) return; const name=$('#climbName').value, len=parseInt($('#climbLen').value); if(!name||len<1) return; s.climbs.push({id:Date.now(),name,len}); $('#climbName').value=''; fullRender(); }
+function renderClimbs(){ const b=$('#climbsTbl tbody'); b.innerHTML=''; const s=state.stages.find(x=>x.id===currentStageId); if(!s) return; s.climbs.forEach(c=>{ b.innerHTML+=`<tr><td title="${c.name}"><span class="ellipsis">${c.name}</span></td><td>${c.len}</td><td><button class="btn warn table" onclick="delClimb(${c.id})">X</button></td></tr>`; }); }
+function delClimb(id){ const s=state.stages.find(x=>x.id===currentStageId); s.climbs=s.climbs.filter(c=>c.id!==id); fullRender(); }
+function addMtnPass(){ const s=state.stages.find(x=>x.id===currentStageId); const cid=$('#mtnClimbSelect').value, rid=$('#mtnRiderSelect').value; if(!s||!cid||!rid) return; const l=currentL(); if(s.mtnPasses.some(p=>p.climbId==cid&&p.riderId==rid)){ alert(l.alertDupMtn); return; } const climb=s.climbs.find(c=>c.id==cid); const passCount=s.mtnPasses.filter(p=>p.climbId==cid).length; const pts=Math.max(0, climb.len-passCount); if(pts>0){ s.mtnPasses.push({climbId:cid,riderId:rid,pts}); renderMtnPasses(); renderStandings(); } }
+function renderMtnPasses(){ const b=$('#mtnPassesTbl tbody'); b.innerHTML=''; const s=state.stages.find(x=>x.id===currentStageId); if(!s) return; s.mtnPasses.forEach((p,idx)=>{ const r=getRider(p.riderId); const c=s.climbs.find(x=>x.id==p.climbId); const color=getTeamColorByRider(p.riderId); b.innerHTML+=`<tr><td title="${c.name}"><span class="ellipsis">${c.name}</span></td><td title="${r.name}"><span class="color-dot" style="background:${color}"></span><span class="ellipsis">${r.name}</span></td><td>${p.pts}</td><td><button class="btn warn table" onclick="delMtnPass(${idx})">X</button></td></tr>`; }); }
+function delMtnPass(idx){ const s=state.stages.find(x=>x.id===currentStageId); s.mtnPasses.splice(idx,1); renderMtnPasses(); renderStandings(); }
+function updateSelectors(){ const s=state.stages.find(x=>x.id===currentStageId); const rids=getActiveRiders(); const options=rids.map(r=>`<option value="${r.id}">${r.name}</option>`).join(''); $('#finRider').innerHTML=options; $('#mtnClimbSelect').innerHTML=s? s.climbs.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''):''; $('#mtnRiderSelect').innerHTML=options; }
+function renderStandings(){ const type=$('#viewSelect').value; const b=$('#standingsTbl tbody'); b.innerHTML=''; const riders=getActiveRiders(); const data=[]; const bonuses=[parseInt($('#bPod1').value||0),parseInt($('#bPod2').value||0),parseInt($('#bPod3').value||0)]; const finishedStages=state.stages.filter(s=>s.finishes.length>0); const anyFinish=finishedStages.length>0; riders.forEach(r=>{ let val=0,hasTime=false,valComb=0,valMtn=0; if(type==='gc'){ finishedStages.forEach(s=>{ const f=s.finishes.find(x=>x.riderId===r.id); if(f){ hasTime=true; val+=(f.turn*600)-(f.over*10); const stageSorted=[...s.finishes].sort((a,b)=>a.turn===b.turn?b.over-a.over:a.turn-b.turn); const rank=stageSorted.findIndex(x=>x.riderId===r.id); if(rank>=0&&rank<3) val-=bonuses[rank]; } }); if(!anyFinish){ val=0; hasTime=true; } } else if(type==='comb'){ state.stages.forEach(s=>{ valComb+=s.turns.filter(t=>t.leaderRiderId===r.id).length*parseInt($('#combPerTurn').value||0); }); } else if(type==='mountain'){ state.stages.forEach(s=>{ valMtn+=s.mtnPasses.filter(p=>p.riderId===r.id).reduce((sum,p)=>sum+p.pts,0); }); } const team=state.teams.find(t=>t.riders.some(rr=>rr.id===r.id)); data.push({id:r.id,name:r.name,teamName:team.name,color:team.color,valSec:type==='gc'?(hasTime?val:null):(type==='comb'?valComb:valMtn)}); }); if(type==='gc'){ const withTime=data.filter(d=>d.valSec!==null), withoutTime=data.filter(d=>d.valSec===null); withTime.sort((a,b)=>a.valSec-b.valSec); const best=withTime.length?withTime[0].valSec:0; withTime.forEach((d,i)=>{ const diff=i==0?'--':'+'+hhmmss(d.valSec-best); b.innerHTML+=`<tr><td>${i+1}</td><td title="${d.name} (${d.teamName})"><span class="color-dot" style="background:${d.color}"></span><span class="ellipsis">${d.name} <small class="muted">(${d.teamName})</small></span></td><td>${hhmmss(d.valSec)}</td><td>${diff}</td></tr>`; }); withoutTime.forEach(d=>{ b.innerHTML+=`<tr><td>-</td><td title="${d.name} (${d.teamName})"><span class="color-dot" style="background:${d.color}"></span><span class="ellipsis">${d.name} <small class="muted">(${d.teamName})</small></span></td><td>${hhmmss(null)}</td><td>—</td></tr>`; }); } else { data.sort((a,b)=>b.valSec-a.valSec); const best=data[0]?.valSec||0; data.forEach((d,i)=>{ const diff=i==0?'--':(d.valSec-best); b.innerHTML+=`<tr><td>${i+1}</td><td title="${d.name} (${d.teamName})"><span class="color-dot" style="background:${d.color}"></span><span class="ellipsis">${d.name} <small class="muted">(${d.teamName})</small></span></td><td>${d.valSec}</td><td>${diff}</td></tr>`; }); } }
+function getActiveRiders(){ return state.teams.filter(t=>t.active).flatMap(t=>t.riders); } function getRider(rid){ return state.teams.flatMap(t=>t.riders).find(r=>r.id===rid); } function getTeamColorByRider(rid){ return state.teams.find(t=>t.riders.some(r=>r.id===rid)).color; }
+
+// Session & defaults & dock
+function msg(text){ alert(text); }
+function saveGame(){ const l=currentL(); localStorage.setItem(localKey, JSON.stringify(state)); msg(l.saveGame); }
+function loadGame(){ const l=currentL(); const saved=localStorage.getItem(localKey); if(saved){ state=JSON.parse(saved); fullRender(); msg(l.loadGame); } }
+function resetAll(){ const l=currentL(); if(confirm(l.resetMsg)){ localStorage.removeItem(localKey); localStorage.removeItem(defaultsKey); localStorage.removeItem(prefsKey); location.reload(); } }
+function saveDefaults(){ const l=currentL(); localStorage.setItem(defaultsKey, JSON.stringify({teams:state.teams})); msg(l.saveDef); }
+function loadDefaults(){ const saved=localStorage.getItem(defaultsKey); if(saved){ state.teams=JSON.parse(saved).teams; fullRender(); } }
+
+// ==== FIX: bind Theme/Density toggles ====
+function applyThemeFromPrefs(){ const p=loadPrefs(); const theme=p.theme||'dark'; document.documentElement.setAttribute('data-theme', theme); }
+function applyDensityFromPrefs(){ const p=loadPrefs(); const dens=p.density||'relaxed'; document.documentElement.classList.toggle('compact', dens==='compact'); }
+function toggleTheme(){ const l=currentL(); const cur=document.documentElement.getAttribute('data-theme')||'dark'; const next=(cur==='light')?'dark':'light'; document.documentElement.setAttribute('data-theme', next); savePrefs({theme: next}); // update button label
+  $('#themeBtn').textContent = next==='light' ? l.themeDark : l.themeLight; }
+function toggleDensity(){ const l=currentL(); const isCompact=document.documentElement.classList.toggle('compact'); savePrefs({density: isCompact?'compact':'relaxed'}); $('#densBtn').textContent = isCompact ? l.densNormal : l.densCompact; }
+
+// Events
+$('#saveBtn').onclick=saveGame; $('#loadBtn').onclick=loadGame; $('#resetBtn').onclick=resetAll;
+$('#saveBtnDock').onclick=saveGame; $('#loadBtnDock').onclick=loadGame; $('#resetBtnDock').onclick=resetAll;
+$('#saveDefaultsBtn').onclick=saveDefaults; $('#loadDefaultsBtn').onclick=loadDefaults;
+$('#lockCfgBtn').onclick=()=>{ state.locked=true; fullRender(); }; $('#unlockCfgBtn').onclick=()=>{ state.locked=false; fullRender(); };
+$('#addStageBtn').onclick=()=>addStage($('#stageName').value); $('#addTurnBtn').onclick=addTurn; $('#addFinishBtn').onclick=addFinish; $('#addClimbBtn').onclick=addClimb; $('#addMtnPassBtn').onclick=addMtnPass; $('#recalcBtn').onclick=renderStandings; $('#viewSelect').onchange=renderStandings;
+$('#langSelect').onchange=()=>{ savePrefs({lang: $('#langSelect').value}); updateLanguage(); };
+$('#themeBtn').onclick=toggleTheme; $('#densBtn').onclick=toggleDensity;
+
+
+// Track import events
+$('#importTrackBtn').onclick = importTrackFromFileInput;
+$('#applyAsNewStageBtn').onclick = applyImportedTrackAsNewStage;
+$('#trackFile').onchange = () => { /* auto preview */ importTrackFromFileInput(); };
+
+// Boot
+function boot(){ const p=loadPrefs(); if(p.lang) $('#langSelect').value=p.lang; applyThemeFromPrefs(); applyDensityFromPrefs(); initTeams(); fullRender(); updateLanguage(); }
+
+
+// ===== Track import (flammerougebuilder JSON) =====
+let lastImportedStageJson = null;
+
+function parseBuilderTile(tileStr){
+  // Expected formats like: "a-upp" or "A-lft" etc.
+  const parts = String(tileStr||'').split('-');
+  return { tileId: parts[0] || '', orientation: parts[1] || '' };
+}
+
+function renderTrackInfo(stageJson){
+  const name = stageJson?.name || '—';
+  $('#trackName').value = name;
+  const tiles = Array.isArray(stageJson?.tiles) ? stageJson.tiles : [];
+  $('#trackTilesCount').value = String(tiles.length);
+  // Estimation: assume 5 squares per tile (placeholder). We'll refine with a tile library later.
+  const estSquares = tiles.length * 5;
+  $('#trackSquaresCount').value = String(estSquares);
+
+  const tbody = $('#trackTilesTbl tbody');
+  tbody.innerHTML = '';
+  tiles.forEach((t, i) => {
+    const p = parseBuilderTile(t);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${p.tileId}</td><td>${p.orientation}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function readJsonFile(file){
+  const txt = await file.text();
+  return JSON.parse(txt);
+}
+
+async function importTrackFromFileInput(){
+  const input = $('#trackFile');
+  if(!input.files || !input.files.length){
+    alert('Selecciona un fitxer .json');
+    return;
+  }
+  try{
+    const json = await readJsonFile(input.files[0]);
+    lastImportedStageJson = json;
+    renderTrackInfo(json);
+  }catch(e){
+    console.error(e);
+    alert('No he pogut llegir el JSON. Revisa que sigui un export del Builder.');
+  }
+}
+
+function applyImportedTrackAsNewStage(){
+  if(!lastImportedStageJson){
+    alert('Importa primer un JSON');
+    return;
+  }
+  const stName = lastImportedStageJson.name || 'Etapa (import)';
+  // Create a new stage and attach track payload
+  const id = Date.now();
+  state.stages.push({
+    id,
+    name: stName,
+    turns: [],
+    finishes: [],
+    climbs: [],
+    mtnPasses: [],
+    track: {
+      source: 'flammerougebuilder',
+      raw: lastImportedStageJson,
+      tiles: (Array.isArray(lastImportedStageJson.tiles) ? lastImportedStageJson.tiles : []).map(parseBuilderTile)
+    }
+  });
+  currentStageId = id;
+  fullRender();
+  $('#currStageNameT').textContent = stName;
+}
+
+boot();
+</script>
+</body>
+</html>
